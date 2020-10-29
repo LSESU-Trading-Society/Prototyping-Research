@@ -37,6 +37,8 @@ plt.show()
 
 ##TODO: Try and write the code to analyse by what percentage we move above and/or below the band on average after generating a "signal"
 
+#making an edit
+
 
 
 
