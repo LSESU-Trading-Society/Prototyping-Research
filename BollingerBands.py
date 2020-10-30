@@ -1,21 +1,15 @@
-import pandas as pd
 import yfinance as yf
-import yahoofinancials
 import matplotlib.pyplot as plt
-import statsmodels.api as sm
-from datetime import date
-
+import numpy as np
 from datetime import datetime
-from scipy.stats import kurtosistest
 
 ticker = 'TSLA' #QUIDEL
 query = yf.Ticker(ticker) #instantiating Ticker object, feeding it our ticker
 df = query.history(start=datetime(2020, 1, 1), end=datetime(2020,10,10))  #querying data, datetime() formats our dates into readable time series date
 
-print(df.head())
 
 periods = 21
-sd_mult = 2.5
+sd_mult = 1
 
 df['MA21'] = df['Close'].ewm(periods).mean()
 df['Upper'] = df['MA21'] + sd_mult*df['Close'].ewm(periods).std()
@@ -24,6 +18,16 @@ df['Daily Return'] = df['Close'].pct_change()
 #
 df['HitUpper'] = df['High'] > df['Upper'].shift(1)
 df['HitLower'] = df['Low'] < df['Lower'].shift(1)
+
+df['MaxUpper'] = 100*(df['High'] - df['Upper'].shift(1))/df['Upper'].shift(1)
+df.MaxUpper[df['MaxUpper']< 0]=np.NaN
+print(df['MaxUpper'].mean())
+print(df['MaxUpper'].max())
+
+df['MaxLower'] = 100*(df['Low'] - df['Lower'].shift(1))/df['Lower'].shift(1)
+df.MaxLower[df['MaxLower']> 0]=np.NaN
+print(df['MaxLower'].mean())
+print(df['MaxLower'].min())
 
 plt.figure(figsize = (12,6))
 plt.plot(df['Close'], label="Price")
@@ -34,20 +38,3 @@ plt.xlabel("Date")
 plt.ylabel("Price")
 plt.legend()
 plt.show()
-
-##TODO: Try and write the code to analyse by what percentage we move above and/or below the band on average after generating a "signal"
-
-#making an edit
-
-
-
-
-
-
-
-
-
-
-
-
-
