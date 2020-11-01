@@ -1,0 +1,40 @@
+import pandas as pd
+import pandas_datareader.data as web
+import numpy as np
+import matplotlib.pyplot as plt
+import datetime
+import time
+
+
+import yfinance as yahoo_finance
+
+
+ticker = 'GOOGL'
+
+start_time = datetime.datetime(2020, 10, 1)
+#end_time = datetime.datetime(2020, 1, 20)
+end_time = datetime.datetime.now().date().isoformat()         # today
+
+df = ticker_df
+
+
+def computeRSI(data, time_window):
+    diff = data.diff(1).dropna()
+
+    up_chg = 0 * diff
+    down_chg = 0 * diff
+
+    up_chg[diff > 0] = diff[diff > 0]
+
+    down_chg[diff < 0] = diff[diff < 0]
+
+    up_chg_avg = up_chg.ewm(com=time_window - 1, min_periods=time_window).mean()
+    down_chg_avg = down_chg.ewm(com=time_window - 1, min_periods=time_window).mean()
+
+    rs = abs(up_chg_avg / down_chg_avg)
+    rsi = 100 - 100 / (1 + rs)
+    return rsi
+
+df['RSI'] = computeRSI(df['Adj Close'], 14)
+
+df
