@@ -1,11 +1,9 @@
 import pandas as pd
-import pandas_datareader.data as web
 import numpy as np
 import matplotlib.pyplot as plt
 import datetime
 import time
-
-
+import pandas_datareader as web
 import yfinance as yahoo_finance
 
 
@@ -15,8 +13,21 @@ start_time = datetime.datetime(2020, 10, 1)
 #end_time = datetime.datetime(2020, 1, 20)
 end_time = datetime.datetime.now().date().isoformat()         # today
 
-df = ticker_df
+connected = False
+while not connected:
+    try:
+        ticker_df = web.get_data_yahoo(ticker, start=start_time, end=end_time)
+        connected = True
+        print('connected to yahoo')
+    except Exception as e:
+        print("type error: " + str(e))
+        time.sleep( 5 )
+        pass
 
+ticker_df = ticker_df.reset_index()
+print(ticker_df.head(5))
+
+df = ticker_df
 
 def computeRSI(data, time_window):
     diff = data.diff(1).dropna()
@@ -37,4 +48,5 @@ def computeRSI(data, time_window):
 
 df['RSI'] = computeRSI(df['Adj Close'], 14)
 
-df
+print(df['RSI'])
+
