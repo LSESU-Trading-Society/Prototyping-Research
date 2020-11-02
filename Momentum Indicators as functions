@@ -1,0 +1,76 @@
+import pandas as pd
+import yfinance as yf
+import matplotlib.pyplot as plt
+import numpy as np
+from datetime import date,datetime,timedelta
+"""
+
+Change to do in the code: change the index column from datetime to numbers 
+and then do the relevant changes to for loops and other.
+
+"""
+# Importing the data
+ticker = 'AAPL' 
+first_day = datetime(2020, 1, 1)
+last_day = datetime(2020,10,10)
+
+data = yf.Ticker(ticker).history(start=first_day, end=last_day)
+
+# Functions:
+
+def SMA(df,period,target_column): #Simple Moving Average
+    name = 'SMA_' + str(period)
+    list = []
+    for i in df.index: #Could be done with pd.dataframe.rolling but it would be hard to account for missing days (days where the markets are closed)
+        if i < first_day + timedelta(days = period): #first_day is not actual first day of data
+            list.append(None)
+        else:
+            list.append(df[target_column][(df.index<=i)&(df.index>i-timedelta(days = period))].mean())
+    """
+    Apply this change for the function to append the list to the data rather than return it
+
+    name = 'SMA_' + str(period)
+    df[name] = pd.DataFrame({'X' : list})
+    return name + " has been added as a column to " + df
+    """
+    return list
+
+def MNTI(df,period): #Momentum Indicator
+    """
+    Same change as before
+    """
+    list = df['Close'].diff(period)
+    return list
+
+def RSI(df,period): #Relative Strength Index
+    """
+    Not functionnal yet
+    """
+    # return 100 - 100/(1-(df['Close'][(df.Close>0) & (df.index<i)&(df.index>=i-timedelta(days = n))].mean()/df['Close'][(df.Close<0) & (df.index<i)&(df.index>=i-timedelta(days = n))].mean()))
+    daily_change = df['Close'].diff(1)
+    list = []
+    for i in df.index:
+        if i < first_day + timedelta(days = period): #first_day is not actual first day of data
+            list.append(None)
+        else:
+            avr_gain = list[(daily_change>0) & (df.index<i)&(df.index>=i-timedelta(days = period))].mean()
+            avr_loss = abs(list[(daily_change<0) & (df.index<i)&(df.index>=i-timedelta(days = period))].mean())
+            rs = avr_gain/avr_loss
+            rsi = 100 - 100/(1-rs)
+
+            list.append(rsi)
+    return list
+
+
+# Code: (testing the functions and random stuff)
+
+# print(data['Close'].rolling(6).mean()-np.array(SMA(data,10,'Close')))
+
+# print(data['Close'])
+# print(data['Close'].rolling(2).mean())
+# print(pd.DataFrame({'ABC' : SMA(data,2,'Close')}))
+print(RSI(data,10))
+
+# print(data['Close'].rolling(10)[data.Close >0].mean())
+# print(data['Close'][data.Close>0])
+# print(SMA(data,10,'Close'))
