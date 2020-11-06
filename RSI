@@ -16,7 +16,7 @@ end_time = datetime.datetime.now().date().isoformat()         # today
 connected = False
 while not connected:
     try:
-        ticker_df = web.get_data_yahoo(ticker, start=start_time, end=end_time)
+        df = web.get_data_yahoo(ticker, start=start_time, end=end_time)
         connected = True
         print('connected to yahoo')
     except Exception as e:
@@ -24,10 +24,7 @@ while not connected:
         time.sleep( 5 )
         pass
 
-ticker_df = ticker_df.reset_index()
-print(ticker_df.head(5))
-
-df = ticker_df
+df = df.reset_index()
 
 def computeRSI(data, time_window):
     diff = data.diff(1).dropna()
