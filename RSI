@@ -1,0 +1,49 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import datetime
+import time
+import pandas_datareader as web
+import yfinance as yahoo_finance
+
+
+ticker = 'GOOGL'
+
+start_time = datetime.datetime(2020, 10, 1)
+#end_time = datetime.datetime(2020, 1, 20)
+end_time = datetime.datetime.now().date().isoformat()         # today
+
+connected = False
+while not connected:
+    try:
+        df = web.get_data_yahoo(ticker, start=start_time, end=end_time)
+        connected = True
+        print('connected to yahoo')
+    except Exception as e:
+        print("type error: " + str(e))
+        time.sleep( 5 )
+        pass
+
+df = df.reset_index()
+
+def computeRSI(data, time_window):
+    diff = data.diff(1).dropna()
+
+    up_chg = 0 * diff
+    down_chg = 0 * diff
+
+    up_chg[diff > 0] = diff[diff > 0]
+
+    down_chg[diff < 0] = diff[diff < 0]
+
+    up_chg_avg = up_chg.ewm(com=time_window - 1, min_periods=time_window).mean()
+    down_chg_avg = down_chg.ewm(com=time_window - 1, min_periods=time_window).mean()
+
+    rs = abs(up_chg_avg / down_chg_avg)
+    rsi = 100 - 100 / (1 + rs)
+    return rsi
+
+df['RSI'] = computeRSI(df['Adj Close'], 14)
+
+print(df['RSI'])
+
