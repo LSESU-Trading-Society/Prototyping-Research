@@ -1,0 +1,66 @@
+import pandas as pd
+import yfinance as yf
+import matplotlib.pyplot as plt
+import numpy as np
+from datetime import date,datetime,timedelta
+
+# Importing the data
+
+ticker = 'AAPL'
+first_day = datetime(2020, 1, 1)
+last_day = datetime(2020,11,5)
+
+data = yf.Ticker(ticker).history(start=first_day, end=last_day)
+data.reset_index(inplace = True)
+
+# Functions:
+
+def SMA(tickerData: pd.DataFrame, columnToUse: str, time_window: int) -> pd.DataFrame: #Simple Moving Average
+
+    tickerData['SMA' + '_' + str(columnToUse) + '_' + str(time_window)] = tickerData[columnToUse].rolling(time_window).mean()
+
+    return tickerData
+
+def MNTI(tickerData: pd.DataFrame, columnToUse: str, time_window: int) -> pd.DataFrame: #Momentum Indicator
+
+    tickerData['MNTI' + '_' + str(columnToUse) + '_' + str(time_window)] = tickerData[columnToUse].diff(time_window)
+
+    return tickerData
+
+def RSI(tickerData: pd.DataFrame, columnToUse: str, time_window: int) -> pd.DataFrame: #Relative Strength 
+    tickerData['Diff'] = tickerData[columnToUse].diff(1)
+    tickerData['PosReturn'] = 0
+    tickerData['NegReturn'] = 0
+
+    tickerData['PosReturn'][tickerData['Diff']>0] = tickerData['Diff']
+    tickerData['NegReturn'][tickerData['Diff']<0] = -tickerData['Diff']
+
+    tickerData['AveragePosReturn'] = tickerData['PosReturn'].rolling(window = time_window,min_periods = time_window).mean() 
+    tickerData['AverageNegReturn'] = tickerData['NegReturn'].rolling(window = time_window,min_periods = time_window).mean()
+
+    tickerData['RSI' + '_' + str(columnToUse) + '_' + str(time_window)] = 100 - 100/(1 + abs(tickerData['AveragePosReturn']/tickerData['AverageNegReturn']))
+    tickerData.drop(['Diff','PosReturn','NegReturn','AveragePosReturn','AverageNegReturn'], axis = 1, inplace = True)
+    return tickerData
+
+def BB(tickerData: pd.DataFrame, columnToUse: str, time_window: int) -> pd.DataFrame: #Bollinger Band
+    tickerData['MBB' + '_' + str(columnToUse) + '_' + str(time_window)] = tickerData[columnToUse].rolling(time_window).mean();
+    tickerData['UBB' + '_' + str(columnToUse) + '_' + str(time_window)] = tickerData['MBB' + '_' + str(columnToUse) + '_' + str(time_window)] + (2 * tickerData[columnToUse].rolling(time_window).std());
+    tickerData['LBB' + '_' + str(columnToUse) + '_' + str(time_window)] = tickerData['MBB' + '_' + str(columnToUse) + '_' + str(time_window)] - (2 * tickerData[columnToUse].rolling(time_window).std());
+
+    return tickerData
+
+def MACD(tickerData: pd.DataFrame, columnToUse: str) -> pd.DataFrame: #Moving Average Convergence Divergence
+    tickerData['exp_12'] = tickerData[columnToUse].ewm(span=12, adjust=False).mean()
+    tickerData['exp_26'] = tickerData[columnToUse].ewm(span=26, adjust=False).mean()
+
+    tickerData['MACD' + '_' + str(columnToUse)] = tickerData['exp_12'] - tickerData['exp_26']
+
+    tickerData['MACD_signal' + '_' + str(columnToUse)] = tickerData['MACD' + '_' + str(columnToUse)].ewm(span=9, adjust=False).mean()
+    tickerData.drop(['exp_12','exp_26'], axis = 1, inplace = True)
+    return tickerData
+
+
+# Code: (testing the functions and random stuff)
+print(RSI(data,'Close',10))
+print(BB(data,'Close',10))
+print(MACD(data,'Close'))
